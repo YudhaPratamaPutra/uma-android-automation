@@ -51,17 +51,17 @@ class Game(val myContext: Context) {
 		"Guts" to 0,
 		"Wit" to 0
 	)
-	private val blacklist: List<String> = sharedPreferences.getStringSet("trainingBlacklist", setOf())!!.toList()
+	private val blacklist: List<String> = sharedPreferences.getStringSet("trainingBlacklist", setOf()!!.toList()
 	private var statPrioritization: List<String> = sharedPreferences.getString("statPrioritization", "Speed|Stamina|Power|Guts|Wit")!!.split("|")
 	private val enablePrioritizeEnergyOptions: Boolean = sharedPreferences.getBoolean("enablePrioritizeEnergyOptions", false)
 	private val maximumFailureChance: Int = sharedPreferences.getInt("maximumFailureChance", 15)
 	private val disableTrainingOnMaxedStat: Boolean = sharedPreferences.getBoolean("disableTrainingOnMaxedStat", true)
 	private val focusOnSparkStatTarget: Boolean = sharedPreferences.getBoolean("focusOnSparkStatTarget", false)
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
-		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
-		"Mile" to intArrayOf(0, 0, 0, 0, 0),
-		"Medium" to intArrayOf(0, 0, 0, 0, 0),
-		"Long" to intArrayOf(0, 0, 0, 0, 0)
+		"Sprint" to intArrayOf(1200, 500, 1200, 300, 800),
+		"Mile" to intArrayOf(1200, 600, 1200, 300, 800),
+		"Medium" to intArrayOf(1200, 1200, 1000, 500, 500),
+		"Long" to intArrayOf(1200, 1200, 1000, 500, 500)
 	)
 	private var preferredDistance: String = ""
 	private var firstTrainingCheck = true
@@ -142,29 +142,29 @@ class Game(val myContext: Context) {
 	 * Sets up stat targets for different race distances by reading values from SharedPreferences. These targets are used to determine training priorities based on the expected race distance.
 	 */
 	private fun setStatTargetsByDistances() {
-		val sprintSpeedTarget = sharedPreferences.getInt("trainingSprintStatTarget_speedStatTarget", 900)
-		val sprintStaminaTarget = sharedPreferences.getInt("trainingSprintStatTarget_staminaStatTarget", 300)
-		val sprintPowerTarget = sharedPreferences.getInt("trainingSprintStatTarget_powerStatTarget", 600)
+		val sprintSpeedTarget = sharedPreferences.getInt("trainingSprintStatTarget_speedStatTarget", 1200)
+		val sprintStaminaTarget = sharedPreferences.getInt("trainingSprintStatTarget_staminaStatTarget", 500)
+		val sprintPowerTarget = sharedPreferences.getInt("trainingSprintStatTarget_powerStatTarget", 1200)
 		val sprintGutsTarget = sharedPreferences.getInt("trainingSprintStatTarget_gutsStatTarget", 300)
-		val sprintWitTarget = sharedPreferences.getInt("trainingSprintStatTarget_witStatTarget", 300)
+		val sprintWitTarget = sharedPreferences.getInt("trainingSprintStatTarget_witStatTarget", 800)
 
-		val mileSpeedTarget = sharedPreferences.getInt("trainingMileStatTarget_speedStatTarget", 900)
-		val mileStaminaTarget = sharedPreferences.getInt("trainingMileStatTarget_staminaStatTarget", 300)
-		val milePowerTarget = sharedPreferences.getInt("trainingMileStatTarget_powerStatTarget", 600)
+		val mileSpeedTarget = sharedPreferences.getInt("trainingMileStatTarget_speedStatTarget", 1200)
+		val mileStaminaTarget = sharedPreferences.getInt("trainingMileStatTarget_staminaStatTarget", 600)
+		val milePowerTarget = sharedPreferences.getInt("trainingMileStatTarget_powerStatTarget", 1200)
 		val mileGutsTarget = sharedPreferences.getInt("trainingMileStatTarget_gutsStatTarget", 300)
-		val mileWitTarget = sharedPreferences.getInt("trainingMileStatTarget_witStatTarget", 300)
+		val mileWitTarget = sharedPreferences.getInt("trainingMileStatTarget_witStatTarget", 800)
 
-		val mediumSpeedTarget = sharedPreferences.getInt("trainingMediumStatTarget_speedStatTarget", 800)
-		val mediumStaminaTarget = sharedPreferences.getInt("trainingMediumStatTarget_staminaStatTarget", 450)
-		val mediumPowerTarget = sharedPreferences.getInt("trainingMediumStatTarget_powerStatTarget", 550)
-		val mediumGutsTarget = sharedPreferences.getInt("trainingMediumStatTarget_gutsStatTarget", 300)
-		val mediumWitTarget = sharedPreferences.getInt("trainingMediumStatTarget_witStatTarget", 300)
+		val mediumSpeedTarget = sharedPreferences.getInt("trainingMediumStatTarget_speedStatTarget", 1200)
+		val mediumStaminaTarget = sharedPreferences.getInt("trainingMediumStatTarget_staminaStatTarget", 1200)
+		val mediumPowerTarget = sharedPreferences.getInt("trainingMediumStatTarget_powerStatTarget", 1000)
+		val mediumGutsTarget = sharedPreferences.getInt("trainingMediumStatTarget_gutsStatTarget", 500)
+		val mediumWitTarget = sharedPreferences.getInt("trainingMediumStatTarget_witStatTarget", 500)
 
-		val longSpeedTarget = sharedPreferences.getInt("trainingLongStatTarget_speedStatTarget", 700)
-		val longStaminaTarget = sharedPreferences.getInt("trainingLongStatTarget_staminaStatTarget", 600)
-		val longPowerTarget = sharedPreferences.getInt("trainingLongStatTarget_powerStatTarget", 450)
-		val longGutsTarget = sharedPreferences.getInt("trainingLongStatTarget_gutsStatTarget", 300)
-		val longWitTarget = sharedPreferences.getInt("trainingLongStatTarget_witStatTarget", 300)
+		val longSpeedTarget = sharedPreferences.getInt("trainingLongStatTarget_speedStatTarget", 1200)
+		val longStaminaTarget = sharedPreferences.getInt("trainingLongStatTarget_staminaStatTarget", 1200)
+		val longPowerTarget = sharedPreferences.getInt("trainingLongStatTarget_powerStatTarget", 1000)
+		val longGutsTarget = sharedPreferences.getInt("trainingLongStatTarget_gutsStatTarget", 500)
+		val longWitTarget = sharedPreferences.getInt("trainingLongStatTarget_witStatTarget", 500)
 
 		// Set the stat targets for each distance type.
 		// Order: Speed, Stamina, Power, Guts, Wit
