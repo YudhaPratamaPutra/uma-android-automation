@@ -2,7 +2,7 @@ package com.steve1316.uma_android_automation.bot
 
 import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
@@ -45,7 +45,6 @@ class Training(private val game: Game) {
 	 */
 	data class TrainingAnalysisResult(
 		val name: StatName,
-		val logMessages: ConcurrentLinkedQueue<String>,
 		val latch: CountDownLatch,
 		val startTime: Long
 	) {
@@ -453,7 +452,10 @@ class Training(private val game: Game) {
 					// Early game bonus for relationship building.
 					val earlyGameBonus = if (config.currentDate.year == DateYear.JUNIOR || config.currentDate.bIsPreDebut) 1.3 else 1.0
 
-					val contribution = baseValue * diminishingFactor * earlyGameBonus
+					// Trainer support bonus to prioritize them slightly above regular supports.
+					val trainerSupportBonus = if (bar.isTrainerSupport) 1.15 else 1.0
+
+					val contribution = baseValue * diminishingFactor * earlyGameBonus * trainerSupportBonus
 					score += contribution
 					maxScore += 2.5 * 1.3
 				}
@@ -779,13 +781,9 @@ class Training(private val game: Game) {
                 // For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
                 val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 5 else 4)
 
-                // Create log message buffer for this training.
-                val logMessages = ConcurrentLinkedQueue<String>()
-
                 // Create result object to store analysis state.
                 val result = TrainingAnalysisResult(
                     name = statName,
-                    logMessages = logMessages,
                     latch = latch,
                     startTime = startTime,
                 )
@@ -827,9 +825,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeStatGains
                         Log.d(TAG, "Total time to determine stat gains for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Stat gains analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -845,9 +840,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeFailureChance
                         Log.d(TAG, "Total time to determine failure chance for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Failure chance analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -855,7 +847,7 @@ class Training(private val game: Game) {
                 Thread {
                     val startTimeRelationshipBars = System.currentTimeMillis()
                     try {
-                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName, game.scenario)
                         result.numRainbow = result.relationshipBars.count { barFillResult -> barFillResult.isRainbow }
                     } catch (e: Exception) {
                         Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
@@ -864,9 +856,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeRelationshipBars
                         Log.d(TAG, "Total time to analyze relationship bars for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Relationship bars analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -883,9 +872,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeSkillHints
                         Log.d(TAG, "Total time to detect skill hints for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Skill hint detection completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -989,8 +975,6 @@ class Training(private val game: Game) {
                             if (BotService.isRunning) {
                                 val elapsedTime = System.currentTimeMillis() - result.startTime
                                 Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
-                                result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
-                                result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                             }
                         }
                     }
@@ -1326,7 +1310,8 @@ class Training(private val game: Game) {
 		// Print relationship bars if any.
 		if (training.relationshipBars.isNotEmpty()) {
 			val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
-				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+				val trainerLabel = if (bar.isTrainerSupport && bar.trainerName != null) "[${bar.trainerName}]" else ""
+				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)$trainerLabel"
 			}.joinToString(", ")
 			sb.appendLine("  -> Relationship bars: $barsSummary")
 		}

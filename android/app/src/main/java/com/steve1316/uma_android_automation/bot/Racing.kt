@@ -1,9 +1,9 @@
 package com.steve1316.uma_android_automation.bot
 
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils.RaceDetails
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
@@ -148,12 +148,15 @@ class Racing (private val game: Game) {
      * This gives the dialog time to close since there is a very short
      * animation that plays when a dialog closes.
      *
+     * @param dialog An optional dialog to evaluate. This allows chaining
+     * dialog handler calls for improved performance.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
-    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+    fun handleDialogs(dialog: DialogInterface? = null): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = dialog ?: DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
             return Pair(false, null)
         }
@@ -677,6 +680,11 @@ class Racing (private val game: Game) {
                 ButtonBack.click(imageUtils = game.imageUtils)
                 return false
             }
+        } else {
+            // No maiden races available on this day. Back out and try again later.
+            MessageLog.i(TAG, "[RACE] No maiden races available on this day. Aborting racing...")
+            ButtonBack.click(imageUtils = game.imageUtils)
+            return false
         }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
@@ -1327,17 +1335,20 @@ class Racing (private val game: Game) {
         // It is assumed that the user is already at the screen with the list of selectable races.
         // Now tap on the Agenda button.
         if (!game.findAndTapImage("race_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Skipping agenda loading.")
+            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Backing out and skipping agenda loading.")
+            ButtonBack.click(game.imageUtils)
+            game.waitForLoading()
             return
         }
         game.waitForLoading()
 
         // Now tap on the My Agenda button.
         if (!game.findAndTapImage("race_my_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and skipping agenda loading.")
+            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and backing out.")
             ButtonClose.click(game.imageUtils)
-            game.waitForLoading()
             game.wait(0.5)
+            ButtonBack.click(game.imageUtils)
+            game.waitForLoading()
             return
         }
         game.waitForLoading()

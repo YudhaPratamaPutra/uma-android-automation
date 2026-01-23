@@ -3,8 +3,8 @@ package com.steve1316.uma_android_automation.bot
 import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
-import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.SettingsHelper
+import com.steve1316.automation_library.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
@@ -29,7 +29,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		"Extra Training" to listOf("Extra Training"),
 		"Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
 		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage"),
-        "Tutorial" to listOf("Tutorial")
+        "Tutorial" to listOf("Tutorial"),
+		"A Team at Last" to listOf("A Team at Last", "Team at Last")
 	)
 	
 	// The full character event data should be stored in SQLite and will be loaded here.
